@@ -16,9 +16,6 @@ permissions:
   contents: read
   packages: write
 
-env:
-  IMAGE: ghcr.io/matrixtm/mhddos
-
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -26,6 +23,10 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v7
+
+      - name: Image name (lowercase owner)
+        id: image
+        run: echo "image=ghcr.io/$(echo '${{ github.repository_owner }}' | tr '[:upper:]' '[:lower:]')/mhddos" >> "$GITHUB_OUTPUT"
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v4
@@ -45,7 +46,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@v6
         with:
-          images: ${{ env.IMAGE }}
+          images: ${{ steps.image.outputs.image }}
           tags: |
             type=ref,event=branch
             type=ref,event=pr

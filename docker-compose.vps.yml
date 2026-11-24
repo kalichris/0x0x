@@ -1,0 +1,28 @@
+services:
+  panel:
+    image: ${MHDDOS_WEB_IMAGE:-ghcr.io/kalichris/mhddos-web:latest}
+    container_name: mhddos-panel
+    restart: unless-stopped
+    init: true
+    ports:
+      # Bound to loopback by default. The panel has no login screen, so do not
+      # publish it to the public internet. Use an SSH tunnel to open it:
+      #   ssh -L 5000:127.0.0.1:5000 <user>@<vps>
+      - "${PANEL_BIND:-127.0.0.1}:${PANEL_PORT:-5000}:5000"
+    environment:
+      WEB_HOST: "0.0.0.0"
+      WEB_PORT: "5000"
+      JWT_SECRET: ${PANEL_SECRET:?PANEL_SECRET is required}
+      PYTHONUNBUFFERED: "1"
+    volumes:
+      - ./config.json:/app/config.json:ro
+      - ./files:/app/files
+    # Layer 4 raw-socket methods (SYN, ICMP, amplification) need NET_RAW.
+    cap_add:
+      - NET_RAW
+    security_opt:
+      - no-new-privileges:true
+    ulimits:
+      nofile:
+        soft: 65535
+        hard: 65535
