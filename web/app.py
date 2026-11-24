@@ -482,7 +482,7 @@ except ImportError:
 
     jwt = importlib.import_module("jwt")
 
-WEB_HOST = getenv("WEB_HOST", "127.0.0.1")
+WEB_HOST = getenv("WEB_HOST", "0.0.0.0")
 WEB_PORT = int(getenv("WEB_PORT", "5000"))
 JWT_SECRET_KEY = getenv("JWT_SECRET") or getenv("PANEL_SECRET") or token_hex(64)
 
@@ -693,7 +693,7 @@ if __name__ == "__main__":
     import argparse
 
     parser = argparse.ArgumentParser(description="MHDDoS Web Control Panel")
-    parser.add_argument("--host", default=WEB_HOST, help="Host to listen on (default: 127.0.0.1)")
+    parser.add_argument("--host", default=WEB_HOST, help="Host to listen on (default: 0.0.0.0)")
     parser.add_argument(
         "--port", type=int, default=WEB_PORT, help="Port to listen on (default: 5000)"
     )

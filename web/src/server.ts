@@ -15,13 +15,17 @@ const getArg = (flag: string) => {
     return idx !== -1 && args[idx + 1] ? args[idx + 1] : null;
 };
 
-const HOST = getArg('--host') || process.env.WEB_HOST || process.env.HOST || '127.0.0.1';
+const HOST = getArg('--host') || process.env.WEB_HOST || process.env.HOST || '0.0.0.0';
 const PORT = parseInt(getArg('--port') || process.env.WEB_PORT || process.env.PORT || '5000', 10);
 
 const BASE_DIR = path.resolve(__dirname, '..', '..');
-const PYTHON_EXE = fs.existsSync(path.join(BASE_DIR, '.venv', 'Scripts', 'python.exe'))
-    ? path.join(BASE_DIR, '.venv', 'Scripts', 'python.exe')
-    : 'python';
+const VENV_PYTHON_WIN = path.join(BASE_DIR, '.venv', 'Scripts', 'python.exe');
+const VENV_PYTHON_POSIX = path.join(BASE_DIR, '.venv', 'bin', 'python');
+const PYTHON_EXE = fs.existsSync(VENV_PYTHON_WIN)
+    ? VENV_PYTHON_WIN
+    : fs.existsSync(VENV_PYTHON_POSIX)
+        ? VENV_PYTHON_POSIX
+        : process.platform === 'win32' ? 'python' : 'python3';
 
 import jwt from 'jsonwebtoken';
 
@@ -221,6 +225,19 @@ app.post('/api/attacks/start', (req: Request, res: Response) => {
         });
 
         const taskId = randomBytes(4).toString('hex');
+        let responded = false;
+
+        proc.on('error', (err: NodeJS.ErrnoException) => {
+            responded = true;
+            const reason = err.code === 'EAGAIN'
+                ? 'System process/thread limit reached (EAGAIN). Close other running tasks or lower --threads.'
+                : err.message;
+            broadcastLog(`[ERROR] Task ${taskId} failed to start: ${reason}`);
+            activeTasks.delete(taskId);
+            if (!res.headersSent) {
+                res.status(503).json({success: false, error: `Failed to start python: ${reason}`});
+            }
+        });
 
         const task: TaskEntry = {
             id: taskId,
@@ -252,7 +269,11 @@ app.post('/api/attacks/start', (req: Request, res: Response) => {
             }
         });
 
-        res.json({success: true, task_id: taskId, pid: proc.pid});
+        proc.on('spawn', () => {
+            if (responded) return;
+            responded = true;
+            res.json({success: true, task_id: taskId, pid: proc.pid});
+        });
     } catch (err: any) {
         res.status(500).json({success: false, error: err.message});
     }

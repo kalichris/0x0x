@@ -11,6 +11,6 @@ if not exist "node_modules" (
     exit /b 1
 )
 
-echo [*] Starting Panel on http://127.0.0.1:5000
+echo [*] Starting Panel on http://0.0.0.0:5000 (LAN accessible)
 set "PATH=%CD%\..\.venv\Scripts;%PATH%"
 npm start

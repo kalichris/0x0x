@@ -12,7 +12,7 @@ if [ ! -d "node_modules" ]; then
     exit 1
 fi
 
-echo "[*] Starting Panel on http://127.0.0.1:5000"
+echo "[*] Starting Panel on http://0.0.0.0:5000 (LAN accessible)"
 if [ -d "../.venv/bin" ]; then
     export PATH="$PWD/../.venv/bin:$PATH"
 fi

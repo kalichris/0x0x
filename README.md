@@ -220,7 +220,8 @@ Then start it from the main CLI:
 python start.py WEB
 ```
 
-The panel listens on `http://127.0.0.1:5000` by default. You can also use the
+The panel listens on `http://0.0.0.0:5000` by default (accessible from devices on
+your LAN via your machine's IP address). You can also use the
 platform launchers directly: `web\scripts\start.bat` on Windows, or
 `bash web/scripts/start.sh` on Linux/macOS.
 
